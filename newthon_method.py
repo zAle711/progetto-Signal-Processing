@@ -19,7 +19,7 @@ x_smaller = x_tr[0:n_osservazioni, :]
 y_smaller = y_tr[0:n_osservazioni]
 
 pesi_parametri = np.zeros(9)
-n_iterazioni = 10;
+n_iterazioni = 1000;
 n_parametri = 9
 
     # diagonal = np.dot(np.eye(numero_osservazioni), np.dot(s, (1-s)))  #(s * (1 - s))
@@ -54,3 +54,5 @@ for step in learning_rate:
                 'value_optimal_parameters': pesi_parametri[:, n_iterazioni-1].tolist()
         }
     save_results_to_json(dictionary, 'newthon_method')
+
+# [Done] exited with code=0 in 53368.387 seconds
