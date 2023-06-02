@@ -4,8 +4,10 @@ from scipy.optimize import minimize
 from multiprocessing import Pool
 from sklearn.preprocessing import StandardScaler
 from logistic_regression import cost_function, sigmoid
+from util import save_results_to_json
 
-n_iterazioni = 1000
+n_iterazioni = 500
+
 n_agenti = 4
 n_parametri = 9
 
@@ -20,7 +22,7 @@ def update_local_variable(x_tr, y_tr, pesi_parametri, z, u, rho):
     """
 
     dati_per_agente = int(x_tr.shape[0]/n_agenti)
-    
+    n_iterazioni = 500
     for i in range(0, n_agenti):
         #print(f"Agente: {i}, range dati assegnato all'agente: {(dati_per_agente*i,dati_per_agente*(i+1))}")
         x_i = x_tr[dati_per_agente*i:dati_per_agente*(i+1), :]
@@ -47,7 +49,10 @@ def update_local_variable(x_tr, y_tr, pesi_parametri, z, u, rho):
 
             s = sigmoid(np.dot(x_i,pesi_parametri[:,i]))
             #sicuramente z è quello dell'iterazione generale
-            pesi_parametri_gradiente[:, j+1] = pesi_parametri_gradiente[:, j]  - (0.01) * (1/x_i.shape[0]) * (np.dot(x_i.T, (s - y_i))) #+ rho *  (pesi_parametri_gradiente[:, j] - z - u[:,j] )
+            #print(((pesi_parametri_gradiente[:, j] - z - u[:,i] ) * rho).shape)
+            # print(pesi_parametri_gradiente[:, j] , z - u[:,j])
+            pesi_parametri_gradiente[:, j+1] = pesi_parametri_gradiente[:, j]  - (0.01) * (1/n_osservazioni) * (np.dot(x_i.T, (s - y_i))) + rho *  (pesi_parametri_gradiente[:, j] - z - u[:,i] )
+    
         pesi_parametri[:, i] = pesi_parametri_gradiente[:,-1]
     return pesi_parametri
 
@@ -95,26 +100,43 @@ def ADMM(x_tr, y_tr):
     #Iniziallizzo le matrici dei pesi, la variaible globale z e la variabile u
     pesi_parametri = np.zeros([n_parametri, n_iterazioni, n_agenti])
     z = np.zeros([n_parametri, n_iterazioni])
-    u = np.zeros([n_parametri, n_iterazioni, n_agenti])
+    u = np.zeros([n_parametri, n_iterazioni, n_agenti]) -1
     #Inizializzo casualmente i primi pesi e valori di u
     pesi_parametri[:,0,:] = np.random.randn(n_parametri,n_agenti)
     u[:,0,:] = np.random.randn(n_parametri,n_agenti)
     #Aggiorno la variaible globale con i nuovi valori
     z[:,0] = update_g(pesi_parametri[:,0,:], u[:,0,:])
-    #Inizializzo matrice per raccogliere i valori della funzione costo
-    costo_logistic = np.zeros([n_agenti, n_iterazioni])
-    costo_logistic[:,0] = cost_function(x_tr, y_tr, pesi_parametri[:,0,:])
 
-    rho = 10
+    #print(costo_logistic[:,0])
 
-    for i in range(0,10):
-        pesi_parametri[:,i+1,:] = update_local_variable(x_tr, y_tr, pesi_parametri[:,i,:], z[:,i], u[:,i,:], rho )
-        z[:, i+1] = update_g(pesi_parametri[:,i+1,:], u[:,i,:])
-        u[:,i+1,:] = update_u(u[:,i,:],pesi_parametri[:,i+1,:], z[:,i+1])
-        costo_logistic[:,i+1] = cost_function(x_tr, y_tr, pesi_parametri[:,i+1,:])
+    rho_list = [0]
+    for rho in rho_list:
+
+        #Inizializzo matrice per raccogliere i valori della funzione costo
+        costo_logistic = np.zeros([n_agenti, n_iterazioni])
+        costo_logistic[:,0] = cost_function(x_tr, y_tr, pesi_parametri[:,0,:],n_agenti)
+
+        for i in range(0,n_iterazioni-1):
+            print(f"Iterazione n. {i}")
+            pesi_parametri[:,i+1,:] = update_local_variable(x_tr, y_tr, pesi_parametri[:,i,:], z[:,i], u[:,i,:], rho)
+            z[:, i+1] = update_g(pesi_parametri[:,i+1,:], u[:,i,:])
+            u[:,i+1,:] = update_u(u[:,i,:],pesi_parametri[:,i+1,:], z[:,i+1])
+            costo_logistic[:,i+1] = cost_function(x_tr, y_tr, pesi_parametri[:,i+1,:],n_agenti)
+
+
+        for i in range(0, len(rho_list)):
+            costi = []
+            for j in range(0, n_iterazioni):
+                costi.append(costo_logistic[:, j].tolist())
+
+            dictionary = {
+                        'rho': i,
+                        'value_cost_function': costi, 
+                        'value_optimal_parameters': pesi_parametri[:, n_iterazioni-1, i].tolist(),
+                        'z': z[:,-1].tolist()
+                }
+    save_results_to_json(dictionary, 'ADMM')
     
-    print(pesi_parametri[:, 9, 0])
-        
 
 
 if __name__ == '__main__': 
@@ -132,3 +154,38 @@ if __name__ == '__main__':
     #update_local_variable(x_tr, y_tr)
 
     ADMM(x_tr, y_tr)
+    # import seaborn as sns
+    # import matplotlib.pyplot as plt
+    
+    # df = pd.read_csv('test.csv')
+    # y_test = df['diabetes']
+    # x_test = df.drop('diabetes', axis=1)
+    # x_test = np.hstack([np.ones([x_test.shape[0],1]), x_test])
+    
+    # w = np.array([0.028360005854234732, 1.259239505968353, -0.07212441849704278, -0.06978846415216239, 0.7399855669257183, 3.08033507866354, 1.7714468607855773, -0.2213661744046548, -0.08539134234828893])
+    # y_predicted = sigmoid(np.dot(x_test,w)) > 0.5
+    # # print(f"x_tr {x_tr.shape} pesi_parametri {pesi_parametri[:,n_iterazioni-1].shape}")
+    # y_predicted = y_predicted.astype(int)
+
+    # from sklearn.metrics import accuracy_score, f1_score, confusion_matrix
+    # conf_matrix = confusion_matrix(y_test, y_predicted)
+
+    # print(f"F1 Score sul TEST SET: {f1_score(y_test, y_predicted)}")
+    # print(f"Accuracy Score sul TEST SET: {accuracy_score(y_test, y_predicted)}")
+
+    # sns.heatmap(conf_matrix, annot=True, fmt='d')
+    # plt.show()
+    
+    # # import json
+    # # with open(f'results/ADMM.json', 'r') as json_file:
+    # #     json_content = json.load(json_file)
+    
+    # # for res in json_content:
+        
+    # #     if 'z' in res.keys():
+    # #         print(res['agente'])
+    # #         print(res['value_optimal_parameters'], res['value_cost_function'][-1])
+    # #         print(res['z'])
+
+
+

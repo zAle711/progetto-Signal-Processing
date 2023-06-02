@@ -12,7 +12,7 @@ def cost_function(x, y, pesi_parametri, n_agenti=0):
         h = sigmoid(np.matmul(x, pesi_parametri))
         m = x.shape[0]
         # h = sigmoid(x @ pesi_parametri)
-        cost = (np.matmul(-y.T, np.log(h + epsilon)) - np.matmul((1 -y.T), np.log(1 - h) + epsilon))/ m
+        cost = (np.dot(-y.T, np.log(h + epsilon)) - np.dot((1 -y.T), np.log(1 - h + epsilon))) / m
         return cost
         
     cost = np.zeros([n_agenti,1])
