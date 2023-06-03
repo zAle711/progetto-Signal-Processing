@@ -17,7 +17,7 @@ x_tr = scaler.fit_transform(x_tr)
 x_tr = np.hstack([np.ones([x_tr.shape[0],1]), x_tr])
 
 #Varibili per il Gradient Descent
-n_iterazioni = 500
+n_iterazioni = 1000
 n_parametri = 9
 n_osservazioni = x_tr.shape[0]
 learning_rate = [50, 1, 0.1, 0.01]

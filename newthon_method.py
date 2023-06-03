@@ -19,7 +19,7 @@ x_smaller = x_tr[0:n_osservazioni, :]
 y_smaller = y_tr[0:n_osservazioni]
 
 pesi_parametri = np.zeros(9)
-n_iterazioni = 10;
+n_iterazioni = 500
 n_parametri = 9
 epsilon = 0.0000001
 learning_rate = [1, 0.1, 0.01, 0.001]
@@ -38,7 +38,7 @@ for step in learning_rate:
     for i in range(0, n_iterazioni-1):
         hessian = compute_hessian(x_smaller, pesi_parametri[:,i])
         h = sigmoid(np.matmul(x_smaller,pesi_parametri[:,i]))
-        gradient = np.dot(x_smaller.T, (h-y_smaller)) / n_osservazioni
+        gradient = np.dot(x_smaller.T, (h-y_smaller)) 
         pesi_parametri[:,i+1] = pesi_parametri[:,i] - step * np.dot(np.linalg.inv(hessian), gradient)
         costo = cost_function(x_smaller, y_smaller, pesi_parametri[:,i+1])
         valore_funzione_costo.append(costo)
