@@ -52,7 +52,7 @@ for step in learning_rate:
                         print(f"Step-Size: {step} Iterazione: {i} Costo: {costo}")
 
                 if abs(valore_funzione_costo[i] - valore_funzione_costo[i+1]) < epsilon:
-                        print("Valore funzione costo minore di epsilon")
+                        print("Valore funzione costo minore di epsilon", step)
                         for j in range(0, n_iterazioni - (i+1) - 1):
                                 valore_funzione_costo.append(valore_funzione_costo[i+1])
                         pesi_parametri[:, n_iterazioni-1] = pesi_parametri[:, i+1]
@@ -64,50 +64,3 @@ for step in learning_rate:
                 'value_optimal_parameters': pesi_parametri[:, n_iterazioni-1].tolist()
         }
         save_results_to_json(dictionary, 'gradient_descent')
-
-        
-
-
-# y_predicted = sigmoid(np.dot(x_tr,pesi_parametri[:,n_iterazioni-1])) > 0.5
-# print(f"x_tr {x_tr.shape} pesi_parametri {pesi_parametri[:,n_iterazioni-1].shape}")
-# y_predicted = y_predicted.astype(int)
-
-# from sklearn.metrics import accuracy_score, f1_score, confusion_matrix
-# conf_matrix = confusion_matrix(y_tr, y_predicted)
-
-# print(f"F1 Score sul TEST SET: {f1_score(y_tr, y_predicted)}")
-# print(f"Accuracy Score sul TEST SET: {accuracy_score(y_tr, y_predicted)}")
-
-# sns.heatmap(conf_matrix, annot=True, fmt='d')
-# plt.show()
-
-
-# df = pd.read_csv('test.csv')
-# y_test = df['diabetes']
-# x_test = df.drop('diabetes', axis=1)
-# x_test = scaler.transform(x_test)
-# x_test = np.hstack([np.ones([x_test.shape[0],1]), x_test])
-
-# w = np.array([
-#             0.03734693420335344,
-#             1.1973622604007053,
-#             -0.0696011920448009,
-#             -0.06429065700451234,
-#             0.7081076842981702,
-#             2.674948636248744,
-#             1.6922240137892257,
-#             -0.21319408228258427,
-#             -0.07945273404935385
-#         ])
-# y_predicted = sigmoid(np.dot(x_test,w)) > 0.5
-# # print(f"x_tr {x_tr.shape} pesi_parametri {pesi_parametri[:,n_iterazioni-1].shape}")
-# y_predicted = y_predicted.astype(int)
-
-# from sklearn.metrics import accuracy_score, f1_score, confusion_matrix
-# conf_matrix = confusion_matrix(y_test, y_predicted)
-
-# print(f"F1 Score sul TEST SET: {f1_score(y_test, y_predicted)}")
-# print(f"Accuracy Score sul TEST SET: {accuracy_score(y_test, y_predicted)}")
-
-# sns.heatmap(conf_matrix, annot=True, fmt='d')
-# plt.show()
