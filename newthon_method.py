@@ -58,5 +58,3 @@ for step in learning_rate:
                 'value_optimal_parameters': pesi_parametri[:, n_iterazioni-1].tolist()
         }
     save_results_to_json(dictionary, 'newthon_method')
-
-# [Done] exited with code=0 in 53368.387 seconds

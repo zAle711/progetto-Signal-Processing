@@ -6,7 +6,7 @@ from sklearn.preprocessing import StandardScaler
 from logistic_regression import cost_function, sigmoid
 from util import save_results_to_json
 
-n_iterazioni = 1000
+n_iterazioni = 500
 
 n_agenti = 4
 n_parametri = 9
@@ -31,13 +31,10 @@ def update_local_variable(x_tr, y_tr, pesi_parametri, z, u, rho):
 
         pesi_parametri_gradiente = np.zeros([n_parametri, n_iterazioni])
         pesi_parametri_gradiente[:, 0] = pesi_parametri[:, i]
-        # print(pesi_parametri_gradiente.shape)
         valore_funzione_costo = []
         valore_funzione_costo.append(
             cost_function(x_tr, y_tr, pesi_parametri[:, i]))
 
-        # gradient = np.dot(x_tr.T, (h-y_tr)) / n_osservazioni
-        #print(pesi_parametri[:, 0].shape)
         for j in range(0, n_iterazioni-1):
 
             if False:
@@ -48,29 +45,18 @@ def update_local_variable(x_tr, y_tr, pesi_parametri, z, u, rho):
                 print("x_tr.T: ", x_i.T.shape, " y_tr: ", y_i.shape)
 
             s = sigmoid(np.dot(x_i, pesi_parametri[:, i]))
-            # sicuramente z è quello dell'iterazione generale
-            #print(((pesi_parametri_gradiente[:, j] - z - u[:,i] ) * rho).shape)
-            # print(pesi_parametri_gradiente[:, j] , z - u[:,j])
+
             pesi_parametri_gradiente[:, j+1] = pesi_parametri_gradiente[:, j] - (0.001) * (1/n_osservazioni) * (np.dot(x_i.T, (s - y_i))) + rho * (pesi_parametri_gradiente[:, j] - z - u[:, i])
 
         pesi_parametri[:, i] = pesi_parametri_gradiente[:, -1]
     return pesi_parametri
 
-# Step-Size: 0.01 Costo: 0.5295995155297352
-# s:  (60390,)
-# x_tr.T:  (9, 60390)  y_tr:  (60390,)
-# G:  (9,)
-# w:  (9,)
-
-
-def update_g(pesi, u):
+def update_z(pesi, u):
     """
     Args:
         pesi : n_parametri X n_agenti
         u : n_parametri X n_agenti
     """
-    # print(pesi[:,1].shape)
-    z = np.zeros([n_parametri, 1])
     # Per calcolarla ho bisogno della media dei pesi sommata alla media di u
     media_pesi = np.zeros(n_parametri)
     media_u = np.zeros(n_parametri)
@@ -107,39 +93,37 @@ def ADMM(x_tr, y_tr):
     pesi_parametri[:, 0, :] = np.random.randn(n_parametri, n_agenti)
     u[:, 0, :] = np.random.randn(n_parametri, n_agenti)
     # Aggiorno la variaible globale con i nuovi valori
-    z[:, 0] = update_g(pesi_parametri[:, 0, :], u[:, 0, :])
+    z[:, 0] = update_z(pesi_parametri[:, 0, :], u[:, 0, :])
 
     # print(costo_logistic[:,0])
 
-    rho_list = [0]
+    rho_list = [0, 0.00001]
     for rho in rho_list:
 
         # Inizializzo matrice per raccogliere i valori della funzione costo
         costo_logistic = np.zeros([n_agenti, n_iterazioni])
-        costo_logistic[:, 0] = cost_function(
-            x_tr, y_tr, pesi_parametri[:, 0, :], n_agenti)
+        costo_logistic[:, 0] = cost_function(x_tr, y_tr, pesi_parametri[:, 0, :], n_agenti)
 
         for i in range(0, n_iterazioni-1):
             print(f"Iterazione n. {i}")
             pesi_parametri[:, i+1, :] = update_local_variable(
                 x_tr, y_tr, pesi_parametri[:, i, :], z[:, i], u[:, i, :], rho)
-            z[:, i+1] = update_g(pesi_parametri[:, i+1, :], u[:, i, :])
+            z[:, i+1] = update_z(pesi_parametri[:, i+1, :], u[:, i, :])
             u[:, i+1, :] = update_u(u[:, i, :], pesi_parametri[:, i+1, :], z[:, i+1])
-            costo_logistic[:, i+1] = cost_function(
-                x_tr, y_tr, pesi_parametri[:, i+1, :], n_agenti)
+            costo_logistic[:, i+1] = cost_function(x_tr, y_tr, pesi_parametri[:, i+1, :], n_agenti)
 
-        for i in range(0, len(rho_list)):
-            costi = []
-            for j in range(0, n_iterazioni):
-                costi.append(costo_logistic[:, j].tolist())
+        
+        costi = []
+        for j in range(0, n_iterazioni):
+            costi.append(costo_logistic[:, j].tolist())
 
-            dictionary = {
-                'rho': i,
-                'value_cost_function': costi,
-                'value_optimal_parameters': [pesi_parametri[:, n_iterazioni-1, j].tolist() for j in range(0, n_agenti)],
-                'z': z[:, -1].tolist()
-            }
-    save_results_to_json(dictionary, 'ADMM')
+        dictionary = {
+            'rho': rho,
+            'value_cost_function': costi,
+            'value_optimal_parameters': [pesi_parametri[:, n_iterazioni-1, j].tolist() for j in range(0, n_agenti)],
+            'z': z[:, -1].tolist()
+        }
+        save_results_to_json(dictionary, 'ADMM')
 
 
 if __name__ == '__main__':
@@ -154,6 +138,4 @@ if __name__ == '__main__':
     # Aggiungo il bias
     x_tr = np.hstack([np.ones([x_tr.shape[0], 1]), x_tr])
     # Chiamata alla funzione ADMM per addestrare il modello logistic regression
-    #update_local_variable(x_tr, y_tr)
-
     ADMM(x_tr, y_tr)
