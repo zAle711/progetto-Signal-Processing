@@ -43,15 +43,15 @@ for step in learning_rate:
         costo = cost_function(x_smaller, y_smaller, pesi_parametri[:,i+1])
         valore_funzione_costo.append(costo)
 
-        if True:
+        if False:
             print(f"Step-Size: {step} Costo: {costo}")
 
         if abs(valore_funzione_costo[i] - valore_funzione_costo[i+1]) < epsilon:
-                        print("Valore funzione costo minore di epsilon")
-                        for _ in range(0, n_iterazioni - (i+1) - 1):
-                                valore_funzione_costo.append(valore_funzione_costo[i+1])
-                        break
+            for _ in range(0, n_iterazioni - (i+1) - 1):
+                    valore_funzione_costo.append(valore_funzione_costo[i+1])
+            break
 
+    #Salvo i risultati ottenuti in un file json
     dictionary = {
                 'step': step,
                 'value_cost_function': valore_funzione_costo,

@@ -58,6 +58,7 @@ for step in learning_rate:
                         pesi_parametri[:, n_iterazioni-1] = pesi_parametri[:, i+1]
                         break
         
+        #Salvo i risultati ottenuti in un file json
         dictionary = {
                 'step': step,
                 'value_cost_function': valore_funzione_costo,

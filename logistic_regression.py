@@ -6,6 +6,7 @@ epsilon = 0.00001
 def sigmoid(z):
     return 1 / (1 + np.exp(-z))
 
+#La funzione costo cambia nel caso in cui sto utilizzando ADMM in cui calcolo il costo per ogni agente
 def cost_function(x, y, pesi_parametri, n_agenti=0):
     
     if n_agenti == 0:

@@ -117,6 +117,7 @@ def ADMM(x_tr, y_tr):
         for j in range(0, n_iterazioni):
             costi.append(costo_logistic[:, j].tolist())
 
+        #Salvo i risultati ottenuti in un file json
         dictionary = {
             'rho': rho,
             'value_cost_function': costi,
